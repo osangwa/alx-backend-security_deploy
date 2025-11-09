@@ -1,13 +1,14 @@
 import os
 from celery import Celery
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'your_project.settings')
+# Set the default Django settings module
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ip_tracking.settings')
 
-app = Celery('your_project')
+app = Celery('ip_tracking')
 
-app.config_from_object('django.conf:settings', namespace='CELERY')
-
-app.autodiscover_tasks()
+# Using Redis as broker (PythonAnywhere provides Redis)
+app.conf.broker_url = 'redis://localhost:6379/0'
+app.conf.result_backend = 'redis://localhost:6379/0'
 
 app.conf.beat_schedule = {
     'detect-suspicious-activity-hourly': {
@@ -18,10 +19,4 @@ app.conf.beat_schedule = {
         'task': 'ip_tracking.tasks.cleanup_old_logs',
         'schedule': 86400.0,
     },
-    'send-daily-reports': {
-        'task': 'ip_tracking.tasks.send_daily_security_report',
-        'schedule': 86400.0,
-    },
 }
-
-app.conf.timezone = 'UTC'
